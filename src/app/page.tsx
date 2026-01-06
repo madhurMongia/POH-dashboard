@@ -55,16 +55,11 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Chain Selector & Date Range Picker */}
+        {/* Chain Selector */}
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
           <ChainSelector 
             selectedChain={selectedChain}
             onChainChange={setSelectedChain}
-          />
-          <DateRangePicker 
-            startDate={dateRange.start} 
-            endDate={dateRange.end} 
-            onRangeChange={(start, end) => setDateRange({ start, end })}
           />
         </div>
       </div>
@@ -72,7 +67,6 @@ export default function Dashboard() {
       {/* Chain Info Banner */}
       <div className="bg-gradient-to-r from-poh-orange/10 to-poh-pink/10 border border-poh-orange/20 rounded-xl p-4">
         <div className="flex items-center gap-3">
-          <span className="text-3xl">{chainConfig.icon}</span>
           <div>
             <h3 className="text-lg font-semibold text-poh-text-primary">
               Viewing {chainConfig.name} Data
@@ -157,16 +151,23 @@ export default function Dashboard() {
 
       {/* Period Analysis */}
       <section className="space-y-6">
-        <h2 className="text-xl font-semibold text-poh-text-primary flex items-center gap-2">
-          <Activity className="w-5 h-5 text-poh-pink" />
-          Period Analysis 
-          <span className="text-sm font-normal text-poh-text-secondary ml-2">
-            ({dateRange.start?.toLocaleDateString()} - {dateRange.end?.toLocaleDateString()})
-          </span>
-        </h2>
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <h2 className="text-xl font-semibold text-poh-text-primary flex items-center gap-2">
+            <Activity className="w-5 h-5 text-poh-pink" />
+            Period Analysis 
+            <span className="text-sm font-normal text-poh-text-secondary ml-2">
+              ({dateRange.start?.toLocaleDateString()} - {dateRange.end?.toLocaleDateString()})
+            </span>
+          </h2>
+          {/* <DateRangePicker 
+            startDate={dateRange.start} 
+            endDate={dateRange.end} 
+            onRangeChange={(start, end) => setDateRange({ start, end })}
+          /> */}
+        </div>
 
         {/* Period Aggregates */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <StatCard 
             title="New Verified" 
             value={periodStats?.verifiedHumanProfiles || 0} 
@@ -195,7 +196,7 @@ export default function Dashboard() {
             variant="red"
             description="In selected period"
           />
-        </div>
+        </div> */}
 
         {/* Charts */}
         {/* <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

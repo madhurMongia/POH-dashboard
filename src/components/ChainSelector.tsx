@@ -22,7 +22,6 @@ export function ChainSelector({ selectedChain, onChainChange }: ChainSelectorPro
               : "text-poh-text-secondary hover:text-poh-text-primary hover:bg-poh-bg-primary"
           )}
         >
-          <span className="text-lg">{chain.icon}</span>
           <span>{chain.name}</span>
         </button>
       ))}

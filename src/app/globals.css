@@ -27,33 +27,6 @@
   --tint-red: #F60C6E;
 }
 
-/* @media (prefers-color-scheme: dark) {
-  :root {
-    /* Main Colors - Dark Mode Updates */
-    /* Orange is same */
-    --color-pink: #FF5BAA;
-    /* Yellow is same */
-
-    /* Backgrounds */
-    --bg-primary: #1B003F;
-    --bg-secondary: #2D0050;
-
-    /* Text */
-    --text-primary: #DAF0FF;
-    --text-secondary: #BECCE5;
-
-    /* UI Elements */
-    --stroke: #42498F;
-
-    /* Tints - Dark Mode Updates */
-    --tint-purple: #D09BFF;
-    --tint-green: #79FFDC;
-    --tint-light-green: #002050;
-    --tint-blue: #8CEAFF;
-    --tint-red: #FF8DBD;
-  }
-} */
-
 body {
   background-color: var(--bg-primary);
   color: var(--text-primary);
