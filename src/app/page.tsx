@@ -1,65 +1,224 @@
-import Image from "next/image";
+'use client';
 
-export default function Home() {
+import { useState, useEffect } from 'react';
+import { useGlobalStats, useCustomRangeStats } from '@/hooks/useAnalytics';
+import { StatCard } from '@/components/ui/StatCard';
+import { TrendChart } from '@/components/TrendChart';
+import { DateRangePicker } from '@/components/DateRangePicker';
+import { ChainSelector } from '@/components/ChainSelector';
+import { subDays, startOfDay, endOfDay } from 'date-fns';
+import { Activity, Globe } from 'lucide-react';
+import { ChainId, getChainConfig } from '@/lib/graphql';
+
+export default function Dashboard() {
+  // Use state without initializer to prevent hydration mismatch
+  const [mounted, setMounted] = useState(false);
+  const [selectedChain, setSelectedChain] = useState<ChainId>('ethereum');
+  const [dateRange, setDateRange] = useState<{ start: Date | null; end: Date | null }>({
+    start: null,
+    end: null
+  });
+
+  // Set initial state on mount
+  useEffect(() => {
+    const end = endOfDay(new Date());
+    const start = startOfDay(subDays(end, 30));
+    setDateRange({ start, end });
+    setMounted(true);
+  }, []);
+
+  const { data: globalStats, isLoading: globalLoading } = useGlobalStats(selectedChain);
+  console.log(globalStats);
+  
+  const { data: rangeData, isLoading: rangeLoading } = useCustomRangeStats(
+    selectedChain,
+    dateRange.start ? dateRange.start.getTime() : null,
+    dateRange.end ? dateRange.end.getTime() : null
+  );
+
+  const stats = globalStats?.globalAnalytics;
+  const periodStats = rangeData?.aggregated;
+  const chainConfig = getChainConfig(selectedChain);
+
+  if (!mounted) {
+    return null; // or a loading skeleton
+  }
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <main className="min-h-screen bg-poh-bg-primary p-4 md:p-8 space-y-8">
+      {/* Header */}
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-poh-text-primary">Proof of Humanity Analytics</h1>
+            <p className="text-poh-text-secondary">Real-time dashboard and historical trends</p>
+          </div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+
+        {/* Chain Selector & Date Range Picker */}
+        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+          <ChainSelector 
+            selectedChain={selectedChain}
+            onChainChange={setSelectedChain}
+          />
+          <DateRangePicker 
+            startDate={dateRange.start} 
+            endDate={dateRange.end} 
+            onRangeChange={(start, end) => setDateRange({ start, end })}
+          />
         </div>
-      </main>
-    </div>
+      </div>
+
+      {/* Chain Info Banner */}
+      <div className="bg-gradient-to-r from-poh-orange/10 to-poh-pink/10 border border-poh-orange/20 rounded-xl p-4">
+        <div className="flex items-center gap-3">
+          <span className="text-3xl">{chainConfig.icon}</span>
+          <div>
+            <h3 className="text-lg font-semibold text-poh-text-primary">
+              Viewing {chainConfig.name} Data
+            </h3>
+            <p className="text-sm text-poh-text-secondary">
+              Analytics from the {chainConfig.name} subgraph
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Global Stats Grid */}
+      <section>
+        <h2 className="text-xl font-semibold mb-4 text-poh-text-primary flex items-center gap-2">
+          <Globe className="w-5 h-5 text-poh-orange" />
+          Global Network State
+          <span className="text-sm font-normal text-poh-text-secondary ml-2">
+            ({chainConfig.name})
+          </span>
+        </h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <StatCard 
+            title="Verified Humans" 
+            value={stats?.verifiedHumanProfiles || 0} 
+            loading={globalLoading}
+            variant="green"
+            description="Total verified profiles"
+          />
+          <StatCard 
+            title="In Queue" 
+            value={stats?.registrationsPending || 0} 
+            loading={globalLoading}
+            variant="yellow"
+            description="Unfunded / Unvouched"
+          />
+          <StatCard 
+            title="Ready for Challenge" 
+            value={stats?.registrationsFunded || 0} 
+            loading={globalLoading}
+            variant="blue"
+            description="Funded & Vouched"
+          />
+          <StatCard 
+            title="In Dispute" 
+            value={stats?.registrationsChallenged || 0} 
+            loading={globalLoading}
+            variant="purple"
+            description="Currently challenged"
+          />
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
+           <StatCard 
+            title="Total Rejected" 
+            value={stats?.registrationsRejected || 0} 
+            loading={globalLoading}
+            variant="red"
+            description="Permanently rejected"
+          />
+          <StatCard 
+            title="Total Submissions" 
+            value={stats?.registrationsSubmitted || 0} 
+            loading={globalLoading}
+            variant="orange"
+            description="All time submissions"
+          />
+           <StatCard 
+            title="Local Submissions" 
+            value={stats?.registrationsSubmittedLocal || 0} 
+            loading={globalLoading}
+            variant="blue"
+            description={`Submitted on ${chainConfig.name}`}
+          />
+          <StatCard 
+            title="Bridged" 
+            value={stats?.registrationsSubmittedBridged || 0} 
+            loading={globalLoading}
+            variant="pink"
+            description="Cross-chain submissions"
+          />
+        </div>
+      </section>
+
+      {/* Period Analysis */}
+      <section className="space-y-6">
+        <h2 className="text-xl font-semibold text-poh-text-primary flex items-center gap-2">
+          <Activity className="w-5 h-5 text-poh-pink" />
+          Period Analysis 
+          <span className="text-sm font-normal text-poh-text-secondary ml-2">
+            ({dateRange.start?.toLocaleDateString()} - {dateRange.end?.toLocaleDateString()})
+          </span>
+        </h2>
+
+        {/* Period Aggregates */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <StatCard 
+            title="New Verified" 
+            value={periodStats?.verifiedHumanProfiles || 0} 
+            loading={rangeLoading}
+            variant="green"
+            description="In selected period"
+          />
+          <StatCard 
+            title="New Submissions" 
+            value={periodStats?.registrationsSubmitted || 0} 
+            loading={rangeLoading}
+            variant="orange"
+            description="In selected period"
+          />
+          <StatCard 
+            title="Challenges" 
+            value={periodStats?.registrationsChallenged || 0} 
+            loading={rangeLoading}
+            variant="purple"
+            description="In selected period"
+          />
+          <StatCard 
+            title="Rejections" 
+            value={periodStats?.registrationsRejected || 0} 
+            loading={rangeLoading}
+            variant="red"
+            description="In selected period"
+          />
+        </div>
+
+        {/* Charts */}
+        {/* <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <TrendChart 
+            title="Registration Activity"
+            data={rangeData?.dailyAnalytics || []}
+            loading={rangeLoading}
+            categories={[
+              { key: 'registrationsSubmitted', color: 'var(--color-orange)', label: 'Submitted' },
+              { key: 'verifiedHumanProfiles', color: 'var(--tint-green)', label: 'Verified' },
+            ]}
+          />
+          <TrendChart 
+            title="Disputes & Rejections"
+            data={rangeData?.dailyAnalytics || []}
+            loading={rangeLoading}
+            categories={[
+              { key: 'registrationsChallenged', color: 'var(--tint-purple)', label: 'Challenged' },
+              { key: 'registrationsRejected', color: 'var(--tint-red)', label: 'Rejected' },
+            ]}
+          />
+        </div> */}
+      </section>
+    </main>
   );
 }
