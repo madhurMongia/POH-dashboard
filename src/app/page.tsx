@@ -123,7 +123,7 @@ export default function Dashboard() {
             value={stats?.registrationsRejected || 0} 
             loading={globalLoading}
             variant="red"
-            description="Permanently rejected"
+            description="rejected"
           />
           <StatCard 
             title="Total Submissions" 
@@ -159,15 +159,15 @@ export default function Dashboard() {
               ({dateRange.start?.toLocaleDateString()} - {dateRange.end?.toLocaleDateString()})
             </span>
           </h2>
-          {/* <DateRangePicker 
+          <DateRangePicker 
             startDate={dateRange.start} 
             endDate={dateRange.end} 
             onRangeChange={(start, end) => setDateRange({ start, end })}
-          /> */}
+          />
         </div>
 
         {/* Period Aggregates */}
-        {/* <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <StatCard 
             title="New Verified" 
             value={periodStats?.verifiedHumanProfiles || 0} 
@@ -196,7 +196,7 @@ export default function Dashboard() {
             variant="red"
             description="In selected period"
           />
-        </div> */}
+        </div>
 
         {/* Charts */}
         {/* <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

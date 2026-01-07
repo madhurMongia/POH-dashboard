@@ -14,13 +14,13 @@ const CHAIN_CONFIGS: Record<ChainId, ChainConfig> = {
     id: 'ethereum',
     name: 'Ethereum',
     subgraphUrl: process.env.NEXT_PUBLIC_ETHEREUM_SUBGRAPH_URL || 
-      'https://api.studio.thegraph.com/query/90401/poh-origin-mainnet/version/latest',
+      'https://api.studio.thegraph.com/query/111393/poh-origin-mainnet/version/latest',
   },
   gnosis: {
     id: 'gnosis',
     name: 'Gnosis Chain',
     subgraphUrl: process.env.NEXT_PUBLIC_GNOSIS_SUBGRAPH_URL || 
-      'https://api.studio.thegraph.com/query/90401/poh-origin-gnosis/version/latest',
+      'https://api.studio.thegraph.com/query/111393/poh-origin-gnosis/version/latest',
   },
 };
 

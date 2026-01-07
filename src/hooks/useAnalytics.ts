@@ -19,7 +19,7 @@ export function useGlobalStats(chainId: ChainId) {
         const client = getGraphQLClient(chainId);
         console.log(client);
         const data = await client.request<GlobalStatsResponse>(GLOBAL_STATS_QUERY);
-        console.log(data);
+        console.log(chainId,data);
         return data || { globalAnalytics: null };
       } catch (error) {
         console.error(`Error fetching global stats for ${chainId}:`, error);
