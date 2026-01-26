@@ -1,9 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useGlobalStats, useCustomRangeStats } from '@/hooks/useAnalytics';
+import { useGlobalStats, useCustomRangeStats, useExpiredProfiles } from '@/hooks/useAnalytics';
 import { StatCard } from '@/components/ui/StatCard';
-import { TrendChart } from '@/components/TrendChart';
 import { DateRangePicker } from '@/components/DateRangePicker';
 import { ChainSelector } from '@/components/ChainSelector';
 import { subDays, startOfDay, endOfDay } from 'date-fns';
@@ -28,7 +27,7 @@ export default function Dashboard() {
   }, []);
 
   const { data: globalStats, isLoading: globalLoading } = useGlobalStats(selectedChain);
-  console.log(globalStats);
+  const { data: expiredCount, isLoading: expiredLoading } = useExpiredProfiles(selectedChain);
   
   const { data: rangeData, isLoading: rangeLoading } = useCustomRangeStats(
     selectedChain,
@@ -89,31 +88,31 @@ export default function Dashboard() {
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <StatCard 
-            title="Verified Humans" 
-            value={stats?.verifiedHumanProfiles || 0} 
-            loading={globalLoading}
+            title="Current Verified" 
+            value={stats ? (Number(stats.verifiedHumanProfiles) - (expiredCount || 0)) : 0} 
+            loading={globalLoading || expiredLoading}
             variant="green"
-            description="Total verified profiles"
+            description="Active (Included)"
           />
           <StatCard 
             title="In Queue" 
             value={stats?.registrationsPending || 0} 
             loading={globalLoading}
-            variant="yellow"
-            description="Unfunded / Unvouched"
+            variant="purple"
+            description="Vouching stage"
           />
           <StatCard 
             title="Ready for Challenge" 
             value={stats?.registrationsFunded || 0} 
             loading={globalLoading}
             variant="blue"
-            description="Funded & Vouched"
+            description="Resolving stage"
           />
           <StatCard 
-            title="In Dispute" 
+            title="Active Disputes" 
             value={stats?.registrationsChallenged || 0} 
             loading={globalLoading}
-            variant="purple"
+            variant="yellow"
             description="Currently challenged"
           />
         </div>
@@ -123,29 +122,59 @@ export default function Dashboard() {
             value={stats?.registrationsRejected || 0} 
             loading={globalLoading}
             variant="red"
-            description="rejected"
+            description="Cumulative rejected"
           />
           <StatCard 
             title="Total Submissions" 
             value={stats?.registrationsSubmitted || 0} 
             loading={globalLoading}
             variant="orange"
-            description="All time submissions"
+            description="All-time submissions"
           />
            <StatCard 
-            title="Local Submissions" 
-            value={stats?.registrationsSubmittedLocal || 0} 
+            title="Total Renewals" 
+            value={stats?.renewalsSubmitted || 0} 
             loading={globalLoading}
             variant="blue"
-            description={`Submitted on ${chainConfig.name}`}
+            description="All-time renewals"
           />
-          <StatCard 
-            title="Bridged" 
-            value={stats?.registrationsSubmittedBridged || 0} 
+           <StatCard 
+            title="Transferred In" 
+            value={stats?.registrationsBridged || 0} 
             loading={globalLoading}
-            variant="pink"
-            description="Cross-chain submissions"
+            variant="green"
+            description="Bridged in (Included)"
           />
+           <StatCard 
+            title="Transferred Out" 
+            value={stats?.registrationsTransferredOut || 0} 
+            loading={globalLoading}
+            variant="gray"
+            description="Bridged out"
+          />
+           <StatCard 
+            title="Withdrawn" 
+            value={stats?.registrationsWithdrawn || 0} 
+            loading={globalLoading}
+            variant="gray"
+            description="Withdrawn submissions"
+          />
+           <StatCard 
+            title="Expired" 
+            value={expiredCount || 0} 
+            loading={expiredLoading}
+            variant="black"
+            description="Expired profiles"
+          />
+           {selectedChain === 'gnosis' && (
+             <StatCard 
+              title="Airdrop Claims" 
+              value={stats?.airdropClaims || 0} 
+              loading={globalLoading}
+              variant="orange"
+              description="Total claimed"
+            />
+           )}
         </div>
       </section>
 
@@ -167,58 +196,66 @@ export default function Dashboard() {
         </div>
 
         {/* Period Aggregates */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-6 gap-4">
           <StatCard 
-            title="New Verified" 
+            title="Verifications Issued" 
             value={periodStats?.verifiedHumanProfiles || 0} 
             loading={rangeLoading}
             variant="green"
-            description="In selected period"
+            description="New verifications"
           />
           <StatCard 
             title="New Submissions" 
             value={periodStats?.registrationsSubmitted || 0} 
             loading={rangeLoading}
             variant="orange"
-            description="In selected period"
+            description="New submissions"
           />
           <StatCard 
-            title="Challenges" 
+            title="Renewals" 
+            value={periodStats?.renewalsSubmitted || 0} 
+            loading={rangeLoading}
+            variant="blue"
+            description="New renewals"
+          />
+           <StatCard 
+            title="Transferred In" 
+            value={periodStats?.registrationsBridged || 0} 
+            loading={rangeLoading}
+            variant="green"
+            description="Bridged in"
+          />
+          <StatCard 
+            title="Disputes Created" 
             value={periodStats?.registrationsChallenged || 0} 
             loading={rangeLoading}
-            variant="purple"
-            description="In selected period"
+            variant="yellow"
+            description="New disputes"
           />
           <StatCard 
             title="Rejections" 
             value={periodStats?.registrationsRejected || 0} 
             loading={rangeLoading}
             variant="red"
-            description="In selected period"
+            description="New rejections"
           />
+          <StatCard 
+            title="Withdrawn" 
+            value={periodStats?.registrationsWithdrawn || 0} 
+            loading={rangeLoading}
+            variant="gray"
+            description="Withdrawn"
+          />
+          {selectedChain === 'gnosis' && (
+            <StatCard 
+              title="Airdrop Claims" 
+              value={periodStats?.airdropClaims || 0} 
+              loading={rangeLoading}
+              variant="orange"
+              description="Claims in period"
+            />
+          )}
         </div>
-
-        {/* Charts */}
-        {/* <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <TrendChart 
-            title="Registration Activity"
-            data={rangeData?.dailyAnalytics || []}
-            loading={rangeLoading}
-            categories={[
-              { key: 'registrationsSubmitted', color: 'var(--color-orange)', label: 'Submitted' },
-              { key: 'verifiedHumanProfiles', color: 'var(--tint-green)', label: 'Verified' },
-            ]}
-          />
-          <TrendChart 
-            title="Disputes & Rejections"
-            data={rangeData?.dailyAnalytics || []}
-            loading={rangeLoading}
-            categories={[
-              { key: 'registrationsChallenged', color: 'var(--tint-purple)', label: 'Challenged' },
-              { key: 'registrationsRejected', color: 'var(--tint-red)', label: 'Rejected' },
-            ]}
-          />
-        </div> */}
       </section>
     </main>
   );

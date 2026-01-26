@@ -1,23 +1,33 @@
 import { ChainId } from '@/lib/graphql';
 
 export interface GlobalAnalytics {
+  id: string;
   verifiedHumanProfiles: string;
   registrationsPending: string;
   registrationsFunded: string;
   registrationsChallenged: string;
   registrationsRejected: string;
   registrationsSubmitted: string;
-  registrationsSubmittedLocal: string;
-  registrationsSubmittedBridged: string;
+  registrationsBridged: string;
+  registrationsTransferredOut: string;
+  registrationsWithdrawn: string;
+  renewalsSubmitted: string;
+  airdropClaims: string;
 }
 
 export interface DailyAnalytics {
-  date: string; // UNIX timestamp
-  registrationsSubmitted: string;
+  id: string;
+  date: string;
   verifiedHumanProfiles: string;
+  registrationsPending: string;
+  registrationsFunded: string;
   registrationsChallenged: string;
   registrationsRejected: string;
-  registrationsPending?: string;
+  registrationsSubmitted: string;
+  registrationsBridged: string;
+  registrationsWithdrawn: string;
+  renewalsSubmitted: string;
+  airdropClaims: string;
 }
 
 export interface GlobalStatsResponse {
@@ -26,10 +36,4 @@ export interface GlobalStatsResponse {
 
 export interface DailyTrendsResponse {
   dailyAnalytics_collection: DailyAnalytics[];
-}
-
-export interface ChainData {
-  chain: ChainId;
-  stats: GlobalAnalytics | null;
-  dailyAnalytics: DailyAnalytics[];
 }

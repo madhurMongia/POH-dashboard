@@ -4,7 +4,7 @@ interface StatCardProps {
   title: string;
   value: string | number;
   description?: string;
-  variant?: 'orange' | 'pink' | 'yellow' | 'purple' | 'green' | 'blue' | 'red';
+  variant?: 'orange' | 'pink' | 'yellow' | 'purple' | 'green' | 'blue' | 'red' | 'gray' | 'black';
   loading?: boolean;
 }
 
@@ -16,6 +16,8 @@ const variantStyles = {
   green: "border-poh-tint-green text-poh-tint-green",
   blue: "border-poh-tint-blue text-poh-tint-blue",
   red: "border-poh-tint-red text-poh-tint-red",
+  gray: "border-gray-500 text-gray-500",
+  black: "border-gray-800 text-gray-800 dark:text-gray-300 dark:border-gray-300",
 };
 
 const bgStyles = {
@@ -26,6 +28,8 @@ const bgStyles = {
   green: "bg-poh-tint-green/10",
   blue: "bg-poh-tint-blue/10",
   red: "bg-poh-tint-red/10",
+  gray: "bg-gray-500/10",
+  black: "bg-gray-800/10 dark:bg-gray-300/10",
 };
 
 export function StatCard({ title, value, description, variant = 'blue', loading }: StatCardProps) {
