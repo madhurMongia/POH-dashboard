@@ -19,28 +19,17 @@ export const GLOBAL_STATS_QUERY = gql`
 `;
 
 // Legacy fallback for queries that might fail on older subgraphs
-export const GLOBAL_STATS_QUERY_NO_RENEWALS = gql`
-  query GlobalStats {
-    globalAnalytics(id: "global") {
-      verifiedHumanProfiles
-      registrationsPending
-      registrationsFunded
-      registrationsChallenged
-      registrationsRejected
-      registrationsSubmitted
-    }
-  }
-`;
-
 export const STATS_BY_RANGE_QUERY = gql`
-  query StatsByRange($startDate: BigInt!, $endDate: BigInt!) {
+  query StatsByRange($startDate: BigInt!, $endDate: BigInt!, $skip: Int!) {
     dailyAnalytics_collection(
       where: {
         date_gte: $startDate
-        date_lte: $endDate
+        date_lt: $endDate
       }
       orderBy: date
       orderDirection: asc
+      first: 1000
+      skip: $skip
     ) {
       id
       date
@@ -54,26 +43,6 @@ export const STATS_BY_RANGE_QUERY = gql`
       registrationsWithdrawn
       renewalsSubmitted
       airdropClaims
-    }
-  }
-`;
-
-export const STATS_BY_RANGE_QUERY_NO_NEW_FIELDS = gql`
-  query StatsByRange($startDate: BigInt!, $endDate: BigInt!) {
-    dailyAnalytics_collection(
-      where: {
-        date_gte: $startDate
-        date_lte: $endDate
-      }
-      orderBy: date
-      orderDirection: asc
-    ) {
-      id
-      date
-      verifiedHumanProfiles
-      registrationsSubmitted
-      registrationsChallenged
-      registrationsRejected
     }
   }
 `;
