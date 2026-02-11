@@ -12,6 +12,11 @@ import {
   DailyAnalytics
 } from '@/types/analytics';
 
+interface SeerCreditsStatsResponse {
+  totalTradesUsingCredits: number;
+  uniqueWalletsUsingCredits: number;
+}
+
 export function useGlobalStats(chainId: ChainId) {
   return useQuery({
     queryKey: ['globalStats', chainId],
@@ -65,23 +70,23 @@ export function useCustomRangeStats(chainId: ChainId, startDate: number | null, 
       const analytics = data.dailyAnalytics_collection || [];
       const total = analytics.reduce((acc, day) => {
         const result = {
-        verifiedHumanProfiles: acc.verifiedHumanProfiles + Number(day.verifiedHumanProfiles || 0),
-        registrationsSubmitted: acc.registrationsSubmitted + Number(day.registrationsSubmitted || 0),
-        registrationsPending: acc.registrationsPending + Number(day.registrationsPending || 0),
-        registrationsFunded: acc.registrationsFunded + Number(day.registrationsFunded || 0),
-        registrationsChallenged: acc.registrationsChallenged + Number(day.registrationsChallenged || 0),
-        registrationsRejected: acc.registrationsRejected + Number(day.registrationsRejected || 0),
-        registrationsBridged: acc.registrationsBridged + Number(day.registrationsBridged || 0),
-        registrationsWithdrawn: acc.registrationsWithdrawn + Number(day.registrationsWithdrawn || 0),
-        renewalsSubmitted: acc.renewalsSubmitted + Number(day.renewalsSubmitted || 0),
-        airdropClaims: acc.airdropClaims + Number(day.airdropClaims || 0),
-        // registrationsTransferredOut not available in DailyAnalytics per schema
-        registrationsTransferredOut: 0,
-        // Mock ID and Date for the aggregated object (not used in display)
-        id: "aggregated",
-        date: "0" 
-      };
-      return result;
+          verifiedHumanProfiles: acc.verifiedHumanProfiles + Number(day.verifiedHumanProfiles || 0),
+          registrationsSubmitted: acc.registrationsSubmitted + Number(day.registrationsSubmitted || 0),
+          registrationsPending: acc.registrationsPending + Number(day.registrationsPending || 0),
+          registrationsFunded: acc.registrationsFunded + Number(day.registrationsFunded || 0),
+          registrationsChallenged: acc.registrationsChallenged + Number(day.registrationsChallenged || 0),
+          registrationsRejected: acc.registrationsRejected + Number(day.registrationsRejected || 0),
+          registrationsBridged: acc.registrationsBridged + Number(day.registrationsBridged || 0),
+          registrationsWithdrawn: acc.registrationsWithdrawn + Number(day.registrationsWithdrawn || 0),
+          renewalsSubmitted: acc.renewalsSubmitted + Number(day.renewalsSubmitted || 0),
+          airdropClaims: acc.airdropClaims + Number(day.airdropClaims || 0),
+          // registrationsTransferredOut not available in DailyAnalytics per schema
+          registrationsTransferredOut: 0,
+          // Mock ID and Date for the aggregated object (not used in display)
+          id: "aggregated",
+          date: "0"
+        };
+        return result;
       }, {
         verifiedHumanProfiles: 0,
         registrationsSubmitted: 0,
@@ -97,7 +102,7 @@ export function useCustomRangeStats(chainId: ChainId, startDate: number | null, 
         id: "aggregated",
         date: "0"
       });
-      
+
       return {
         dailyAnalytics: analytics,
         aggregated: total
@@ -126,17 +131,17 @@ export function useExpiredProfiles(chainId: ChainId) {
             now,
             lastId
           });
-          
+
           const registrations = data.registrations || [];
           expiredCount += registrations.length;
-          
+
           if (registrations.length < 1000) {
             hasMore = false;
           } else {
             lastId = registrations[registrations.length - 1].id;
           }
         }
-        
+
         return expiredCount;
       } catch (error) {
         console.error(`Error fetching expired profiles for ${chainId}:`, error);
@@ -144,7 +149,30 @@ export function useExpiredProfiles(chainId: ChainId) {
       }
     },
     // Cache for a longer time since this is a heavy query
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    staleTime: 1000 * 60 * 10, // 10 minutes
+  });
+}
+
+export function useSeerCreditsStats(chainId: ChainId) {
+  return useQuery({
+    queryKey: ['seerCreditsStats', chainId],
+    queryFn: async () => {
+      if (chainId !== 'gnosis') {
+        return {
+          totalTradesUsingCredits: 0,
+          uniqueWalletsUsingCredits: 0,
+        };
+      }
+
+      const response = await fetch('/api/seer-credits-stats');
+      if (!response.ok) {
+        throw new Error(`Failed to fetch Seer Credits stats: ${response.status}`);
+      }
+
+      return response.json() as Promise<SeerCreditsStatsResponse>;
+    },
+    enabled: chainId === 'gnosis',
+    staleTime: 1000 * 60 * 10, // 10 minutes
   });
 }
 
