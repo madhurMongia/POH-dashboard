@@ -27,6 +27,31 @@
   --tint-red: #F60C6E;
 }
 
+:root[data-theme="dark"] {
+  /* Main Colors */
+  --color-orange: #FF9966;
+  --color-pink: #FF8CA9;
+  --color-yellow: #FFBE66;
+
+  /* Backgrounds */
+  --bg-primary: #0B0B0B;
+  --bg-secondary: #141414;
+
+  /* Text */
+  --text-primary: #F5F5F5;
+  --text-secondary: #B0B0B0;
+
+  /* UI Elements */
+  --stroke: #2A2A2A;
+
+  /* Tints */
+  --tint-purple: #BE75FF;
+  --tint-green: #00D9A1;
+  --tint-light-green: #0F2B23;
+  --tint-blue: #00D1FF;
+  --tint-red: #F60C6E;
+}
+
 body {
   background-color: var(--bg-primary);
   color: var(--text-primary);

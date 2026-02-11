@@ -6,12 +6,13 @@ import { StatCard } from '@/components/ui/StatCard';
 import { DateRangePicker } from '@/components/DateRangePicker';
 import { ChainSelector } from '@/components/ChainSelector';
 import { subDays, startOfDay, endOfDay } from 'date-fns';
-import { Activity, Globe } from 'lucide-react';
+import { Activity, Globe, Moon, Sun } from 'lucide-react';
 import { ChainId, getChainConfig } from '@/lib/graphql';
 
 export default function Dashboard() {
   // Use state without initializer to prevent hydration mismatch
   const [mounted, setMounted] = useState(false);
+  const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const [selectedChain, setSelectedChain] = useState<ChainId>('ethereum');
   const [dateRange, setDateRange] = useState<{ start: Date | null; end: Date | null }>({
     start: null,
@@ -23,12 +24,16 @@ export default function Dashboard() {
     const end = endOfDay(new Date());
     const start = startOfDay(subDays(end, 30));
     setDateRange({ start, end });
+    const storedTheme = typeof window !== 'undefined' ? localStorage.getItem('poh-theme') : null;
+    const initialTheme = storedTheme === 'dark' ? 'dark' : 'light';
+    setTheme(initialTheme);
+    document.documentElement.dataset.theme = initialTheme;
     setMounted(true);
   }, []);
 
   const { data: globalStats, isLoading: globalLoading } = useGlobalStats(selectedChain);
   const { data: expiredCount, isLoading: expiredLoading } = useExpiredProfiles(selectedChain);
-  
+
   const { data: rangeData, isLoading: rangeLoading } = useCustomRangeStats(
     selectedChain,
     dateRange.start ? dateRange.start.getTime() : null,
@@ -43,6 +48,13 @@ export default function Dashboard() {
     return null; // or a loading skeleton
   }
 
+  const toggleTheme = () => {
+    const nextTheme = theme === 'dark' ? 'light' : 'dark';
+    setTheme(nextTheme);
+    localStorage.setItem('poh-theme', nextTheme);
+    document.documentElement.dataset.theme = nextTheme;
+  };
+
   return (
     <main className="min-h-screen bg-poh-bg-primary p-4 md:p-8 space-y-8">
       {/* Header */}
@@ -52,11 +64,20 @@ export default function Dashboard() {
             <h1 className="text-3xl font-bold text-poh-text-primary">Proof of Humanity Analytics</h1>
             <p className="text-poh-text-secondary">Real-time dashboard and historical trends</p>
           </div>
+          <button
+            type="button"
+            onClick={toggleTheme}
+            className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-poh-stroke text-poh-text-secondary hover:text-poh-text-primary"
+            aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+            title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+          >
+            {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+          </button>
         </div>
 
         {/* Chain Selector */}
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
-          <ChainSelector 
+          <ChainSelector
             selectedChain={selectedChain}
             onChainChange={setSelectedChain}
           />
@@ -87,110 +108,110 @@ export default function Dashboard() {
           </span>
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatCard 
-            title="Current Verified" 
-            value={stats ? (Number(stats.verifiedHumanProfiles) - (expiredCount || 0)) : 0} 
+          <StatCard
+            title="Current Verified"
+            value={stats ? (Number(stats.verifiedHumanProfiles) - (expiredCount || 0)) : 0}
             loading={globalLoading || expiredLoading}
             variant="green"
             description="Active (Included)"
           />
-          <StatCard 
-            title="In Queue" 
-            value={stats?.registrationsPending || 0} 
+          <StatCard
+            title="In Queue"
+            value={stats?.registrationsPending || 0}
             loading={globalLoading}
             variant="purple"
             description="Vouching stage"
           />
-          <StatCard 
-            title="Ready for Challenge" 
-            value={stats?.registrationsFunded || 0} 
+          <StatCard
+            title="Ready for Challenge"
+            value={stats?.registrationsFunded || 0}
             loading={globalLoading}
             variant="blue"
             description="Resolving stage"
           />
-          <StatCard 
-            title="Active Disputes" 
-            value={stats?.registrationsChallenged || 0} 
+          <StatCard
+            title="Active Disputes"
+            value={stats?.registrationsChallenged || 0}
             loading={globalLoading}
             variant="yellow"
             description="Currently challenged"
           />
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
-           <StatCard 
-            title="Total Rejected" 
-            value={stats?.registrationsRejected || 0} 
+          <StatCard
+            title="Total Rejected"
+            value={stats?.registrationsRejected || 0}
             loading={globalLoading}
             variant="red"
             description="Cumulative rejected"
           />
-          <StatCard 
-            title="Total Submissions" 
-            value={stats?.registrationsSubmitted || 0} 
+          <StatCard
+            title="Total Submissions"
+            value={stats?.registrationsSubmitted || 0}
             loading={globalLoading}
             variant="orange"
             description="All-time submissions"
           />
-           <StatCard 
-            title="Total Renewals" 
-            value={stats?.renewalsSubmitted || 0} 
+          <StatCard
+            title="Total Renewals"
+            value={stats?.renewalsSubmitted || 0}
             loading={globalLoading}
             variant="blue"
             description="All-time renewals"
           />
-           <StatCard 
-            title="Transferred In" 
-            value={stats?.registrationsBridged || 0} 
+          <StatCard
+            title="Transferred In"
+            value={stats?.registrationsBridged || 0}
             loading={globalLoading}
             variant="green"
             description="Bridged in (Included)"
           />
-           <StatCard 
-            title="Transferred Out" 
-            value={stats?.registrationsTransferredOut || 0} 
+          <StatCard
+            title="Transferred Out"
+            value={stats?.registrationsTransferredOut || 0}
             loading={globalLoading}
             variant="gray"
             description="Bridged out"
           />
-           <StatCard 
-            title="Withdrawn" 
-            value={stats?.registrationsWithdrawn || 0} 
+          <StatCard
+            title="Withdrawn"
+            value={stats?.registrationsWithdrawn || 0}
             loading={globalLoading}
             variant="gray"
             description="Withdrawn submissions"
           />
-           <StatCard 
-            title="Expired" 
-            value={expiredCount || 0} 
+          <StatCard
+            title="Expired"
+            value={expiredCount || 0}
             loading={expiredLoading}
             variant="black"
             description="Expired profiles"
           />
-           {selectedChain === 'gnosis' && (
-             <>
-               <StatCard 
-                title="Airdrop Claims" 
-                value={stats?.airdropClaims || 0} 
+          {selectedChain === 'gnosis' && (
+            <>
+              <StatCard
+                title="Airdrop Claims"
+                value={stats?.airdropClaims || 0}
                 loading={globalLoading}
                 variant="orange"
                 description="Total claimed"
               />
-               <StatCard 
-                title="Seer Credits Trades" 
-                value={Number(stats?.seerCreditsBuys || 0)} 
+              <StatCard
+                title="Seer Credits Trades"
+                value={Number(stats?.seerCreditsBuys || 0)}
                 loading={globalLoading}
                 variant="pink"
-                description="POH users buys using credits"
+                description="Total trades by POH users using credits"
               />
-               <StatCard 
-                title="Seer Credits Users" 
-                value={Number(stats?.seerCreditsUsers || 0)} 
+              <StatCard
+                title="Seer Credits Users"
+                value={Number(stats?.seerCreditsUsers || 0)}
                 loading={globalLoading}
                 variant="purple"
                 description="POH users with 1+ buy"
               />
-             </>
-           )}
+            </>
+          )}
         </div>
       </section>
 
@@ -199,88 +220,88 @@ export default function Dashboard() {
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <h2 className="text-xl font-semibold text-poh-text-primary flex items-center gap-2">
             <Activity className="w-5 h-5 text-poh-pink" />
-            Period Analysis 
+            Period Analysis
             <span className="text-sm font-normal text-poh-text-secondary ml-2">
               ({dateRange.start?.toLocaleDateString()} - {dateRange.end?.toLocaleDateString()})
             </span>
           </h2>
-          <DateRangePicker 
-            startDate={dateRange.start} 
-            endDate={dateRange.end} 
+          <DateRangePicker
+            startDate={dateRange.start}
+            endDate={dateRange.end}
             onRangeChange={(start, end) => setDateRange({ start, end })}
           />
         </div>
 
         {/* Period Aggregates */}
         <div className="grid grid-cols-2 lg:grid-cols-6 gap-4">
-          <StatCard 
-            title="Verifications Issued" 
-            value={periodStats?.verifiedHumanProfiles || 0} 
+          <StatCard
+            title="Verifications Issued"
+            value={periodStats?.verifiedHumanProfiles || 0}
             loading={rangeLoading}
             variant="green"
             description="New verifications"
           />
-          <StatCard 
-            title="New Submissions" 
-            value={periodStats?.registrationsSubmitted || 0} 
+          <StatCard
+            title="New Submissions"
+            value={periodStats?.registrationsSubmitted || 0}
             loading={rangeLoading}
             variant="orange"
             description="New submissions"
           />
-          <StatCard 
-            title="Renewals" 
-            value={periodStats?.renewalsSubmitted || 0} 
+          <StatCard
+            title="Renewals"
+            value={periodStats?.renewalsSubmitted || 0}
             loading={rangeLoading}
             variant="blue"
             description="New renewals"
           />
-           <StatCard 
-            title="Transferred In" 
-            value={periodStats?.registrationsBridged || 0} 
+          <StatCard
+            title="Transferred In"
+            value={periodStats?.registrationsBridged || 0}
             loading={rangeLoading}
             variant="green"
             description="Bridged in"
           />
-          <StatCard 
-            title="Disputes Created" 
-            value={periodStats?.registrationsChallenged || 0} 
+          <StatCard
+            title="Disputes Created"
+            value={periodStats?.registrationsChallenged || 0}
             loading={rangeLoading}
             variant="yellow"
             description="New disputes"
           />
-          <StatCard 
-            title="Rejections" 
-            value={periodStats?.registrationsRejected || 0} 
+          <StatCard
+            title="Rejections"
+            value={periodStats?.registrationsRejected || 0}
             loading={rangeLoading}
             variant="red"
             description="New rejections"
           />
-          <StatCard 
-            title="Withdrawn" 
-            value={periodStats?.registrationsWithdrawn || 0} 
+          <StatCard
+            title="Withdrawn"
+            value={periodStats?.registrationsWithdrawn || 0}
             loading={rangeLoading}
             variant="gray"
             description="Withdrawn"
           />
           {selectedChain === 'gnosis' && (
             <>
-              <StatCard 
-                title="Airdrop Claims" 
-                value={periodStats?.airdropClaims || 0} 
+              <StatCard
+                title="Airdrop Claims"
+                value={periodStats?.airdropClaims || 0}
                 loading={rangeLoading}
                 variant="orange"
                 description="Claims in period"
               />
-              <StatCard 
-                title="Seer Credits Trades" 
-                value={periodStats?.seerCreditsBuys || 0} 
+              <StatCard
+                title="Seer Credits Trades"
+                value={periodStats?.seerCreditsBuys || 0}
                 loading={rangeLoading}
                 variant="pink"
                 description="POH users buys in period"
               />
-              <StatCard 
-                title="Seer Credits Users" 
-                value={periodStats?.seerCreditsUsers || 0} 
+              <StatCard
+                title="Seer Credits Users"
+                value={periodStats?.seerCreditsUsers || 0}
                 loading={rangeLoading}
                 variant="purple"
                 description="POH users with 1+ buy in period"
