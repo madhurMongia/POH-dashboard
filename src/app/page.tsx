@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useGlobalStats, useCustomRangeStats, useExpiredProfiles, useSeerCreditsStats } from '@/hooks/useAnalytics';
+import { useGlobalStats, useCustomRangeStats, useExpiredProfiles } from '@/hooks/useAnalytics';
 import { StatCard } from '@/components/ui/StatCard';
 import { DateRangePicker } from '@/components/DateRangePicker';
 import { ChainSelector } from '@/components/ChainSelector';
@@ -28,7 +28,6 @@ export default function Dashboard() {
 
   const { data: globalStats, isLoading: globalLoading } = useGlobalStats(selectedChain);
   const { data: expiredCount, isLoading: expiredLoading } = useExpiredProfiles(selectedChain);
-  const { data: seerCreditsStats, isLoading: seerCreditsLoading } = useSeerCreditsStats(selectedChain);
   
   const { data: rangeData, isLoading: rangeLoading } = useCustomRangeStats(
     selectedChain,
@@ -177,16 +176,16 @@ export default function Dashboard() {
                 description="Total claimed"
               />
                <StatCard 
-                title="Seer Credits Buys" 
-                value={seerCreditsStats?.totalTradesUsingCredits || 0} 
-                loading={seerCreditsLoading}
+                title="Seer Credits Trades" 
+                value={Number(stats?.seerCreditsBuys || 0)} 
+                loading={globalLoading}
                 variant="pink"
                 description="POH users buys using credits"
               />
                <StatCard 
                 title="Seer Credits Users" 
-                value={seerCreditsStats?.uniqueWalletsUsingCredits || 0} 
-                loading={seerCreditsLoading}
+                value={Number(stats?.seerCreditsUsers || 0)} 
+                loading={globalLoading}
                 variant="purple"
                 description="POH users with 1+ buy"
               />
@@ -264,13 +263,29 @@ export default function Dashboard() {
             description="Withdrawn"
           />
           {selectedChain === 'gnosis' && (
-            <StatCard 
-              title="Airdrop Claims" 
-              value={periodStats?.airdropClaims || 0} 
-              loading={rangeLoading}
-              variant="orange"
-              description="Claims in period"
-            />
+            <>
+              <StatCard 
+                title="Airdrop Claims" 
+                value={periodStats?.airdropClaims || 0} 
+                loading={rangeLoading}
+                variant="orange"
+                description="Claims in period"
+              />
+              <StatCard 
+                title="Seer Credits Trades" 
+                value={periodStats?.seerCreditsBuys || 0} 
+                loading={rangeLoading}
+                variant="pink"
+                description="POH users buys in period"
+              />
+              <StatCard 
+                title="Seer Credits Users" 
+                value={periodStats?.seerCreditsUsers || 0} 
+                loading={rangeLoading}
+                variant="purple"
+                description="POH users with 1+ buy in period"
+              />
+            </>
           )}
         </div>
       </section>

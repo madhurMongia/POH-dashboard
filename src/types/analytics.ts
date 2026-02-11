@@ -13,6 +13,8 @@ export interface GlobalAnalytics {
   registrationsWithdrawn: string;
   renewalsSubmitted: string;
   airdropClaims: string;
+  seerCreditsBuys: string;
+  seerCreditsUsers: string;
 }
 
 export interface DailyAnalytics {
@@ -28,6 +30,8 @@ export interface DailyAnalytics {
   registrationsWithdrawn: string;
   renewalsSubmitted: string;
   airdropClaims: string;
+  seerCreditsBuys: string;
+  seerCreditsUsers: string;
 }
 
 export interface GlobalStatsResponse {

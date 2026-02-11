@@ -1,3 +1,5 @@
+// LEGACY: kept for fallback/reference only.
+// Active dashboard path reads Seer Credits metrics from subgraph fields.
 import {
   createPublicClient,
   http,
