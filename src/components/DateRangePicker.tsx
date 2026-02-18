@@ -23,7 +23,14 @@ export function DateRangePicker({ startDate, endDate, onRangeChange }: DateRange
   const handlePresetClick = (preset: typeof presets[0]) => {
     setActivePreset(preset.value);
     const end = endOfDay(new Date());
-    const start = startOfDay(subDays(end, preset.days));
+    let start: Date;
+
+    if (preset.value === 'all') {
+      start = startOfDay(new Date('2024-09-01'));
+    } else {
+      start = startOfDay(subDays(end, preset.days));
+    }
+
     onRangeChange(start, end);
   };
 
