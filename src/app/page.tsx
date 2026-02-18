@@ -210,6 +210,13 @@ export default function Dashboard() {
                 variant="purple"
                 description="POH users with 1+ buy"
               />
+              <StatCard
+                title="Seer Claim Users"
+                value={globalStats?.seerClaimRendersAllTime || 0}
+                loading={globalLoading}
+                variant="blue"
+                description="All-time unique eligible visitors"
+              />
             </>
           )}
         </div>
@@ -305,6 +312,13 @@ export default function Dashboard() {
                 loading={rangeLoading}
                 variant="purple"
                 description="POH users with 1+ buy in period"
+              />
+              <StatCard
+                title="Seer Claim Views"
+                value={rangeData?.seerClaimRendersInRange || 0}
+                loading={rangeLoading}
+                variant="blue"
+                description="Sum of daily unique eligible visitors in period"
               />
             </>
           )}

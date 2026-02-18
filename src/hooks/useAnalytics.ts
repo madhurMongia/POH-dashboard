@@ -18,6 +18,14 @@ import {
   DailyAnalytics
 } from '@/types/analytics';
 
+type SeerClaimGlobalResponse = {
+  uniqueEstimate?: number;
+};
+
+type SeerClaimRangeResponse = {
+  totalUniqueEstimate?: number;
+};
+
 export function useGlobalStats(chainId: ChainId) {
   return useQuery({
     queryKey: ['globalStats', chainId],
@@ -66,7 +74,25 @@ export function useGlobalStats(chainId: ChainId) {
         data.globalAnalytics.registrationsTransferredOut = String(outTransfersCount);
       }
 
-      return data;
+      let seerClaimRendersAllTime = 0;
+      if (chainId === 'gnosis') {
+        try {
+          const response = await fetch('/api/seer-claim-metrics?scope=global', {
+            cache: 'no-store',
+          });
+          if (response.ok) {
+            const seerData = (await response.json()) as SeerClaimGlobalResponse;
+            seerClaimRendersAllTime = Math.round(Number(seerData.uniqueEstimate || 0));
+          }
+        } catch (error) {
+          console.error('Error fetching Seer claim global metrics:', error);
+        }
+      }
+
+      return {
+        ...data,
+        seerClaimRendersAllTime,
+      };
     },
   });
 }
@@ -155,9 +181,26 @@ export function useCustomRangeStats(chainId: ChainId, startDate: number | null, 
         seerCreditsUsersInRange = walletSet.size;
       }
 
+      let seerClaimRendersInRange = 0;
+      if (chainId === 'gnosis') {
+        try {
+          const response = await fetch(
+            `/api/seer-claim-metrics?from=${startUtcSec}&to=${endUtcSecExclusive - 1}`,
+            { cache: 'no-store' }
+          );
+          if (response.ok) {
+            const seerData = (await response.json()) as SeerClaimRangeResponse;
+            seerClaimRendersInRange = Math.round(Number(seerData.totalUniqueEstimate || 0));
+          }
+        } catch (error) {
+          console.error('Error fetching Seer claim range metrics:', error);
+        }
+      }
+
       return {
         dailyAnalytics_collection: allRows,
         seerCreditsUsersInRange,
+        seerClaimRendersInRange,
       };
     },
     enabled: !!startDate && !!endDate,
@@ -210,7 +253,8 @@ export function useCustomRangeStats(chainId: ChainId, startDate: number | null, 
             typeof data.seerCreditsUsersInRange === 'number'
               ? data.seerCreditsUsersInRange
               : total.seerCreditsUsers,
-        }
+        },
+        seerClaimRendersInRange: data.seerClaimRendersInRange || 0,
       };
     },
   });
