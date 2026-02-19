@@ -22,8 +22,8 @@ type SeerClaimGlobalResponse = {
   uniqueEstimate?: number;
 };
 
-type SeerClaimRangeResponse = {
-  totalUniqueEstimate?: number;
+type SeerClaimDayResponse = {
+  uniqueEstimate?: number;
 };
 
 export function useGlobalStats(chainId: ChainId) {
@@ -181,26 +181,26 @@ export function useCustomRangeStats(chainId: ChainId, startDate: number | null, 
         seerCreditsUsersInRange = walletSet.size;
       }
 
-      let seerClaimRendersInRange = 0;
+      let seerClaimRendersInDay = 0;
       if (chainId === 'gnosis') {
         try {
           const response = await fetch(
-            `/api/seer-claim-metrics?from=${startUtcSec}&to=${endUtcSecExclusive - 1}`,
+            `/api/seer-claim-metrics?scope=day&day=${endUtcSec}`,
             { cache: 'no-store' }
           );
           if (response.ok) {
-            const seerData = (await response.json()) as SeerClaimRangeResponse;
-            seerClaimRendersInRange = Math.round(Number(seerData.totalUniqueEstimate || 0));
+            const seerData = (await response.json()) as SeerClaimDayResponse;
+            seerClaimRendersInDay = Math.round(Number(seerData.uniqueEstimate || 0));
           }
         } catch (error) {
-          console.error('Error fetching Seer claim range metrics:', error);
+          console.error('Error fetching Seer claim day metrics:', error);
         }
       }
 
       return {
         dailyAnalytics_collection: allRows,
         seerCreditsUsersInRange,
-        seerClaimRendersInRange,
+        seerClaimRendersInDay,
       };
     },
     enabled: !!startDate && !!endDate,
@@ -254,7 +254,7 @@ export function useCustomRangeStats(chainId: ChainId, startDate: number | null, 
               ? data.seerCreditsUsersInRange
               : total.seerCreditsUsers,
         },
-        seerClaimRendersInRange: data.seerClaimRendersInRange || 0,
+        seerClaimRendersInDay: data.seerClaimRendersInDay || 0,
       };
     },
   });

@@ -314,11 +314,11 @@ export default function Dashboard() {
                 description="POH users with 1+ buy in period"
               />
               <StatCard
-                title="Seer Claim Views"
-                value={rangeData?.seerClaimRendersInRange || 0}
+                title="Seer Claim Users (Day)"
+                value={rangeData?.seerClaimRendersInDay || 0}
                 loading={rangeLoading}
                 variant="blue"
-                description="Sum of daily unique eligible visitors in period"
+                description="Unique eligible visitors on selected end day"
               />
             </>
           )}
