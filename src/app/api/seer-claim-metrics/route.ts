@@ -55,7 +55,13 @@ export async function GET(request: Request) {
         metric: METRIC_NAME,
         scope: 'day',
         day: dayStart,
-        uniqueEstimate: Math.round(Number(data.totalUniqueEstimate || 0)),
+        uniqueEstimate: Math.round(
+          Number(
+            data.uniqueEstimate ??
+            data.totalUniqueEstimate ??
+            0
+          )
+        ),
       });
     }
 

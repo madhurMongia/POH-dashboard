@@ -120,6 +120,11 @@ export function useCustomRangeStats(chainId: ChainId, startDate: number | null, 
         endDateObj.getUTCDate()
       ) / 1000);
       const endUtcSecExclusive = endUtcSec + 86400;
+      const endDayUtcSecForVisitors = Math.floor(Date.UTC(
+        endDateObj.getFullYear(),
+        endDateObj.getMonth(),
+        endDateObj.getDate()
+      ) / 1000);
 
       const allRows: DailyAnalytics[] = [];
       let skip = 0;
@@ -185,7 +190,7 @@ export function useCustomRangeStats(chainId: ChainId, startDate: number | null, 
       if (chainId === 'gnosis') {
         try {
           const response = await fetch(
-            `/api/seer-claim-metrics?scope=day&day=${endUtcSec}`,
+            `/api/seer-claim-metrics?scope=day&day=${endDayUtcSecForVisitors}`,
             { cache: 'no-store' }
           );
           if (response.ok) {
