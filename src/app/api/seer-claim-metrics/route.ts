@@ -7,7 +7,7 @@ const DAY_SECONDS = 86_400;
 
 const getBaseUrl = () =>
   process.env.POH_WEB_ANALYTICS_BASE_URL ||
-  "https://deploy-preview-345--proof-of-humanity-v2.netlify.app";
+  "https://v2.proofofhumanity.id";
 
 const toUtcDayStart = (unixSeconds: number) =>
   Math.floor(unixSeconds / DAY_SECONDS) * DAY_SECONDS;
