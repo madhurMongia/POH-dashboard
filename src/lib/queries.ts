@@ -20,6 +20,28 @@ export const GLOBAL_STATS_QUERY = gql`
   }
 `;
 
+export const GLOBAL_STATS_QUERY_GNOSIS = gql`
+  query GlobalStatsGnosis {
+    globalAnalytics(id: "global") {
+      verifiedHumanProfiles
+      registrationsPending
+      registrationsFunded
+      registrationsChallenged
+      registrationsRejected
+      registrationsSubmitted
+      registrationsBridged
+      registrationsTransferredOut
+      registrationsWithdrawn
+      renewalsSubmitted
+      airdropClaims
+      seerCreditsBuys
+      seerCreditsUsers
+      foresightParticipants
+      foresightCreditUsers
+    }
+  }
+`;
+
 export const GLOBAL_STATS_QUERY_ETHEREUM = gql`
   query GlobalStatsEthereum {
     globalAnalytics(id: "global") {
@@ -185,6 +207,30 @@ export const SEER_CREDITS_DAILY_USERS_BY_RANGE_QUERY = gql`
       where: { id_gt: $lastId, id_lt: $endId }
     ) {
       id
+    }
+  }
+`;
+
+export const FORESIGHT_RANGE_QUERY = gql`
+  query ForesightRange($from: BigInt!, $to: BigInt!, $first: Int!, $skip: Int!) {
+    foresightTrades(
+      first: $first
+      skip: $skip
+      where: { timestamp_gte: $from, timestamp_lt: $to }
+      orderBy: timestamp
+      orderDirection: asc
+    ) {
+      humanityId
+    }
+
+    foresightCreditUses(
+      first: $first
+      skip: $skip
+      where: { timestamp_gte: $from, timestamp_lt: $to }
+      orderBy: timestamp
+      orderDirection: asc
+    ) {
+      humanityId
     }
   }
 `;

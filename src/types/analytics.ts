@@ -1,5 +1,3 @@
-import { ChainId } from '@/lib/graphql';
-
 export interface GlobalAnalytics {
   id: string;
   verifiedHumanProfiles: string;
@@ -15,6 +13,8 @@ export interface GlobalAnalytics {
   airdropClaims: string;
   seerCreditsBuys: string;
   seerCreditsUsers: string;
+  foresightParticipants: string;
+  foresightCreditUsers: string;
 }
 
 export interface DailyAnalytics {

@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { getGraphQLClient, ChainId } from '@/lib/graphql';
 import {
   GLOBAL_STATS_QUERY,
+  GLOBAL_STATS_QUERY_GNOSIS,
   GLOBAL_STATS_QUERY_ETHEREUM,
   GLOBAL_STATS_QUERY_ETHEREUM_LEGACY,
   STATS_BY_RANGE_QUERY,
@@ -11,6 +12,7 @@ import {
   EXPIRED_REGISTRATIONS_V2_ONLY_QUERY,
   OUT_TRANSFERS_COUNT_QUERY,
   SEER_CREDITS_DAILY_USERS_BY_RANGE_QUERY,
+  FORESIGHT_RANGE_QUERY,
 } from '@/lib/queries';
 import {
   GlobalStatsResponse,
@@ -26,18 +28,77 @@ type SeerClaimDayResponse = {
   uniqueEstimate?: number;
 };
 
+type ForesightRangeResponse = {
+  foresightTrades: { humanityId: string }[];
+  foresightCreditUses: { humanityId: string }[];
+};
+
+const FORESIGHT_PAGE_SIZE = 1000;
+
+async function fetchDistinctForesightUsersInRange(
+  client: ReturnType<typeof getGraphQLClient>,
+  from: number,
+  to: number
+) {
+  const traderIds = new Set<string>();
+  const creditUserIds = new Set<string>();
+  let skip = 0;
+
+  while (true) {
+    const data = await client.request<ForesightRangeResponse>(FORESIGHT_RANGE_QUERY, {
+      from,
+      to,
+      first: FORESIGHT_PAGE_SIZE,
+      skip,
+    });
+
+    const trades = data.foresightTrades || [];
+    const creditUses = data.foresightCreditUses || [];
+
+    for (const trade of trades) {
+      traderIds.add(trade.humanityId.toLowerCase());
+    }
+
+    for (const creditUse of creditUses) {
+      creditUserIds.add(creditUse.humanityId.toLowerCase());
+    }
+
+    if (trades.length < FORESIGHT_PAGE_SIZE && creditUses.length < FORESIGHT_PAGE_SIZE) {
+      break;
+    }
+
+    skip += FORESIGHT_PAGE_SIZE;
+  }
+
+  return {
+    foresightParticipantsInRange: traderIds.size,
+    foresightCreditUsersInRange: creditUserIds.size,
+  };
+}
+
 export function useGlobalStats(chainId: ChainId) {
   return useQuery({
     queryKey: ['globalStats', chainId],
     queryFn: async () => {
       const client = getGraphQLClient(chainId);
-      const globalQuery = chainId === 'ethereum' ? GLOBAL_STATS_QUERY_ETHEREUM : GLOBAL_STATS_QUERY;
       let data: GlobalStatsResponse;
-      try {
-        data = await client.request<GlobalStatsResponse>(globalQuery);
-      } catch (error) {
-        if (chainId !== 'ethereum') throw error;
-        data = await client.request<GlobalStatsResponse>(GLOBAL_STATS_QUERY_ETHEREUM_LEGACY);
+      if (chainId === 'ethereum') {
+        try {
+          data = await client.request<GlobalStatsResponse>(GLOBAL_STATS_QUERY_ETHEREUM);
+        } catch {
+          data = await client.request<GlobalStatsResponse>(GLOBAL_STATS_QUERY_ETHEREUM_LEGACY);
+        }
+      } else {
+        try {
+          data = await client.request<GlobalStatsResponse>(GLOBAL_STATS_QUERY_GNOSIS);
+        } catch {
+          data = await client.request<GlobalStatsResponse>(GLOBAL_STATS_QUERY);
+        }
+      }
+
+      if (data.globalAnalytics) {
+        data.globalAnalytics.foresightParticipants = data.globalAnalytics.foresightParticipants || '0';
+        data.globalAnalytics.foresightCreditUsers = data.globalAnalytics.foresightCreditUsers || '0';
       }
 
       if (chainId === 'ethereum' && data.globalAnalytics) {
@@ -101,7 +162,14 @@ export function useCustomRangeStats(chainId: ChainId, startDate: number | null, 
   return useQuery({
     queryKey: ['customRangeStats', chainId, startDate, endDate],
     queryFn: async () => {
-      if (!startDate || !endDate) return { dailyAnalytics_collection: [], seerCreditsUsersInRange: null };
+      if (!startDate || !endDate) {
+        return {
+          dailyAnalytics_collection: [],
+          seerCreditsUsersInRange: null,
+          foresightParticipantsInRange: null,
+          foresightCreditUsersInRange: null,
+        };
+      }
       const client = getGraphQLClient(chainId);
       const rangeQuery = chainId === 'ethereum' ? STATS_BY_RANGE_QUERY_ETHEREUM : STATS_BY_RANGE_QUERY;
       let activeRangeQuery = rangeQuery;
@@ -162,6 +230,8 @@ export function useCustomRangeStats(chainId: ChainId, startDate: number | null, 
       }
 
       let seerCreditsUsersInRange: number | null = null;
+      let foresightParticipantsInRange: number | null = null;
+      let foresightCreditUsersInRange: number | null = null;
       if (chainId === 'gnosis') {
         const walletSet = new Set<string>();
         const endId = `${endUtcSecExclusive}-`;
@@ -184,6 +254,18 @@ export function useCustomRangeStats(chainId: ChainId, startDate: number | null, 
         }
 
         seerCreditsUsersInRange = walletSet.size;
+
+        try {
+          const foresightRange = await fetchDistinctForesightUsersInRange(
+            client,
+            startUtcSec,
+            endUtcSecExclusive
+          );
+          foresightParticipantsInRange = foresightRange.foresightParticipantsInRange;
+          foresightCreditUsersInRange = foresightRange.foresightCreditUsersInRange;
+        } catch (error) {
+          console.error('Error fetching Foresight range metrics:', error);
+        }
       }
 
       let seerClaimRendersInDay = 0;
@@ -205,6 +287,8 @@ export function useCustomRangeStats(chainId: ChainId, startDate: number | null, 
       return {
         dailyAnalytics_collection: allRows,
         seerCreditsUsersInRange,
+        foresightParticipantsInRange,
+        foresightCreditUsersInRange,
         seerClaimRendersInDay,
       };
     },
@@ -258,6 +342,14 @@ export function useCustomRangeStats(chainId: ChainId, startDate: number | null, 
             typeof data.seerCreditsUsersInRange === 'number'
               ? data.seerCreditsUsersInRange
               : total.seerCreditsUsers,
+          foresightParticipants:
+            typeof data.foresightParticipantsInRange === 'number'
+              ? data.foresightParticipantsInRange
+              : 0,
+          foresightCreditUsers:
+            typeof data.foresightCreditUsersInRange === 'number'
+              ? data.foresightCreditUsersInRange
+              : 0,
         },
         seerClaimRendersInDay: data.seerClaimRendersInDay || 0,
       };

@@ -217,6 +217,20 @@ export default function Dashboard() {
                 variant="blue"
                 description="All-time unique eligible visitors"
               />
+              <StatCard
+                title="Foresight Traders"
+                value={Number(stats?.foresightParticipants || 0)}
+                loading={globalLoading}
+                variant="purple"
+                description="All-time POH users who traded on Foresight"
+              />
+              <StatCard
+                title="Foresight Credit Users"
+                value={Number(stats?.foresightCreditUsers || 0)}
+                loading={globalLoading}
+                variant="purple"
+                description="All-time POH users who used credits on Foresight"
+              />
             </>
           )}
         </div>
@@ -319,6 +333,20 @@ export default function Dashboard() {
                 loading={rangeLoading}
                 variant="blue"
                 description="Unique eligible visitors on selected end day"
+              />
+              <StatCard
+                title="Foresight Traders"
+                value={periodStats?.foresightParticipants || 0}
+                loading={rangeLoading}
+                variant="purple"
+                description="Distinct POH users who traded in period"
+              />
+              <StatCard
+                title="Foresight Credit Users"
+                value={periodStats?.foresightCreditUsers || 0}
+                loading={rangeLoading}
+                variant="purple"
+                description="Distinct POH users who used credits in period"
               />
             </>
           )}
