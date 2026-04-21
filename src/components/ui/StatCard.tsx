@@ -2,10 +2,11 @@ import { cn } from "@/lib/utils";
 
 interface StatCardProps {
   title: string;
-  value: string | number;
+  value: string | number | null;
   description?: string;
   variant?: 'orange' | 'pink' | 'yellow' | 'purple' | 'green' | 'blue' | 'red' | 'gray' | 'black';
   loading?: boolean;
+  error?: string;
 }
 
 const variantStyles = {
@@ -32,7 +33,7 @@ const bgStyles = {
   black: "bg-gray-800/10 dark:bg-gray-300/10",
 };
 
-export function StatCard({ title, value, description, variant = 'blue', loading }: StatCardProps) {
+export function StatCard({ title, value, description, variant = 'blue', loading, error }: StatCardProps) {
   return (
     <div className={cn(
       "p-6 rounded-xl border-2 transition-all duration-200 hover:shadow-lg",
@@ -47,12 +48,17 @@ export function StatCard({ title, value, description, variant = 'blue', loading 
           <div className="h-10 w-24 animate-pulse bg-gray-200/20 rounded" />
         ) : (
           <div className="text-3xl font-bold font-mono">
-            {value}
+            {value ?? '—'}
           </div>
         )}
         {description && (
           <p className="text-xs text-poh-text-secondary mt-1">
             {description}
+          </p>
+        )}
+        {error && (
+          <p className="text-xs font-medium mt-2 rounded-md px-2 py-1 bg-poh-tint-red/10 text-poh-tint-red">
+            {error}
           </p>
         )}
       </div>

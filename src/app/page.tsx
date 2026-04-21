@@ -31,10 +31,20 @@ export default function Dashboard() {
     setMounted(true);
   }, []);
 
-  const { data: globalStats, isLoading: globalLoading } = useGlobalStats(selectedChain);
+  const {
+    data: globalStats,
+    isLoading: globalLoading,
+    isError: globalQueryFailed,
+    error: globalQueryError,
+  } = useGlobalStats(selectedChain);
   const { data: expiredCount, isLoading: expiredLoading } = useExpiredProfiles(selectedChain);
 
-  const { data: rangeData, isLoading: rangeLoading } = useCustomRangeStats(
+  const {
+    data: rangeData,
+    isLoading: rangeLoading,
+    isError: rangeQueryFailed,
+    error: rangeQueryError,
+  } = useCustomRangeStats(
     selectedChain,
     dateRange.start ? dateRange.start.getTime() : null,
     dateRange.end ? dateRange.end.getTime() : null
@@ -43,6 +53,8 @@ export default function Dashboard() {
   const stats = globalStats?.globalAnalytics;
   const periodStats = rangeData?.aggregated;
   const chainConfig = getChainConfig(selectedChain);
+  const globalSectionErrors = globalStats?.sectionErrors || {};
+  const rangeSectionErrors = rangeData?.sectionErrors || {};
 
   if (!mounted) {
     return null; // or a loading skeleton
@@ -97,6 +109,12 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+
+      {globalQueryFailed && (
+        <div className="rounded-xl border border-poh-tint-red/30 bg-poh-tint-red/10 p-4 text-sm text-poh-tint-red">
+          Failed to load global stats for {chainConfig.name}. {globalQueryError instanceof Error ? globalQueryError.message : ''}
+        </div>
+      )}
 
       {/* Global Stats Grid */}
       <section>
@@ -212,10 +230,11 @@ export default function Dashboard() {
               />
               <StatCard
                 title="Seer Claim Users"
-                value={globalStats?.seerClaimRendersAllTime || 0}
+                value={globalStats?.seerClaimRendersAllTime ?? null}
                 loading={globalLoading}
                 variant="blue"
                 description="All-time unique eligible visitors"
+                error={globalSectionErrors.seerClaimRendersAllTime}
               />
               <StatCard
                 title="Foresight Traders"
@@ -252,6 +271,12 @@ export default function Dashboard() {
             onRangeChange={(start, end) => setDateRange({ start, end })}
           />
         </div>
+
+        {rangeQueryFailed && (
+          <div className="rounded-xl border border-poh-tint-red/30 bg-poh-tint-red/10 p-4 text-sm text-poh-tint-red">
+            Failed to load period analysis for {chainConfig.name}. {rangeQueryError instanceof Error ? rangeQueryError.message : ''}
+          </div>
+        )}
 
         {/* Period Aggregates */}
         <div className="grid grid-cols-2 lg:grid-cols-6 gap-4">
@@ -329,24 +354,27 @@ export default function Dashboard() {
               />
               <StatCard
                 title="Seer Claim Users (Day)"
-                value={rangeData?.seerClaimRendersInDay || 0}
+                value={rangeData?.seerClaimRendersInDay ?? null}
                 loading={rangeLoading}
                 variant="blue"
                 description="Unique eligible visitors on selected end day"
+                error={rangeSectionErrors.seerClaimRendersInDay}
               />
               <StatCard
                 title="Foresight Traders"
-                value={periodStats?.foresightParticipants || 0}
+                value={periodStats?.foresightParticipants ?? null}
                 loading={rangeLoading}
                 variant="purple"
                 description="Distinct POH users who traded in period"
+                error={rangeSectionErrors.foresightRange}
               />
               <StatCard
                 title="Foresight Credit Users"
-                value={periodStats?.foresightCreditUsers || 0}
+                value={periodStats?.foresightCreditUsers ?? null}
                 loading={rangeLoading}
                 variant="purple"
                 description="Distinct POH users who used credits in period"
+                error={rangeSectionErrors.foresightRange}
               />
             </>
           )}

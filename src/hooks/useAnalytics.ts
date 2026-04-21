@@ -11,7 +11,6 @@ import {
   EXPIRED_REGISTRATIONS_QUERY,
   EXPIRED_REGISTRATIONS_V2_ONLY_QUERY,
   OUT_TRANSFERS_COUNT_QUERY,
-  SEER_CREDITS_DAILY_USERS_BY_RANGE_QUERY,
   FORESIGHT_RANGE_QUERY,
 } from '@/lib/queries';
 import {
@@ -33,7 +32,18 @@ type ForesightRangeResponse = {
   foresightCreditUses: { humanityId: string }[];
 };
 
+type AnalyticsSectionErrors = {
+  seerClaimRendersAllTime?: string;
+  foresightRange?: string;
+  seerClaimRendersInDay?: string;
+};
+
 const FORESIGHT_PAGE_SIZE = 1000;
+
+function getErrorMessage(error: unknown, fallback: string) {
+  if (error instanceof Error && error.message) return error.message;
+  return fallback;
+}
 
 async function fetchDistinctForesightUsersInRange(
   client: ReturnType<typeof getGraphQLClient>,
@@ -136,6 +146,7 @@ export function useGlobalStats(chainId: ChainId) {
       }
 
       let seerClaimRendersAllTime = 0;
+      const sectionErrors: AnalyticsSectionErrors = {};
       if (chainId === 'gnosis') {
         try {
           const response = await fetch('/api/seer-claim-metrics?scope=global', {
@@ -146,13 +157,17 @@ export function useGlobalStats(chainId: ChainId) {
             seerClaimRendersAllTime = Math.round(Number(seerData.uniqueEstimate || 0));
           }
         } catch (error) {
-          console.error('Error fetching Seer claim global metrics:', error);
+          sectionErrors.seerClaimRendersAllTime = getErrorMessage(
+            error,
+            'Failed to load Seer claim global metrics.'
+          );
         }
       }
 
       return {
         ...data,
         seerClaimRendersAllTime,
+        sectionErrors,
       };
     },
   });
@@ -168,6 +183,8 @@ export function useCustomRangeStats(chainId: ChainId, startDate: number | null, 
           seerCreditsUsersInRange: null,
           foresightParticipantsInRange: null,
           foresightCreditUsersInRange: null,
+          seerClaimRendersInDay: null,
+          sectionErrors: {} as AnalyticsSectionErrors,
         };
       }
       const client = getGraphQLClient(chainId);
@@ -232,29 +249,9 @@ export function useCustomRangeStats(chainId: ChainId, startDate: number | null, 
       let seerCreditsUsersInRange: number | null = null;
       let foresightParticipantsInRange: number | null = null;
       let foresightCreditUsersInRange: number | null = null;
+      let seerClaimRendersInDay: number | null = null;
+      const sectionErrors: AnalyticsSectionErrors = {};
       if (chainId === 'gnosis') {
-        const walletSet = new Set<string>();
-        const endId = `${endUtcSecExclusive}-`;
-        let lastId = `${startUtcSec}-`;
-
-        while (true) {
-          const data = await client.request<{ seerCreditsDailyUsers: { id: string }[] }>(
-            SEER_CREDITS_DAILY_USERS_BY_RANGE_QUERY,
-            { lastId, endId }
-          );
-          const rows = data.seerCreditsDailyUsers || [];
-          for (const row of rows) {
-            const separatorIndex = row.id.indexOf('-');
-            if (separatorIndex === -1) continue;
-            walletSet.add(row.id.slice(separatorIndex + 1).toLowerCase());
-          }
-
-          if (rows.length < 1000) break;
-          lastId = rows[rows.length - 1].id;
-        }
-
-        seerCreditsUsersInRange = walletSet.size;
-
         try {
           const foresightRange = await fetchDistinctForesightUsersInRange(
             client,
@@ -264,11 +261,13 @@ export function useCustomRangeStats(chainId: ChainId, startDate: number | null, 
           foresightParticipantsInRange = foresightRange.foresightParticipantsInRange;
           foresightCreditUsersInRange = foresightRange.foresightCreditUsersInRange;
         } catch (error) {
-          console.error('Error fetching Foresight range metrics:', error);
+          sectionErrors.foresightRange = getErrorMessage(
+            error,
+            'Failed to load Foresight range metrics.'
+          );
         }
       }
 
-      let seerClaimRendersInDay = 0;
       if (chainId === 'gnosis') {
         try {
           const response = await fetch(
@@ -280,7 +279,10 @@ export function useCustomRangeStats(chainId: ChainId, startDate: number | null, 
             seerClaimRendersInDay = Math.round(Number(seerData.uniqueEstimate || 0));
           }
         } catch (error) {
-          console.error('Error fetching Seer claim day metrics:', error);
+          sectionErrors.seerClaimRendersInDay = getErrorMessage(
+            error,
+            'Failed to load Seer claim day metrics.'
+          );
         }
       }
 
@@ -290,6 +292,7 @@ export function useCustomRangeStats(chainId: ChainId, startDate: number | null, 
         foresightParticipantsInRange,
         foresightCreditUsersInRange,
         seerClaimRendersInDay,
+        sectionErrors,
       };
     },
     enabled: !!startDate && !!endDate,
@@ -345,13 +348,14 @@ export function useCustomRangeStats(chainId: ChainId, startDate: number | null, 
           foresightParticipants:
             typeof data.foresightParticipantsInRange === 'number'
               ? data.foresightParticipantsInRange
-              : 0,
+              : null,
           foresightCreditUsers:
             typeof data.foresightCreditUsersInRange === 'number'
               ? data.foresightCreditUsersInRange
-              : 0,
+              : null,
         },
-        seerClaimRendersInDay: data.seerClaimRendersInDay || 0,
+        seerClaimRendersInDay: data.seerClaimRendersInDay,
+        sectionErrors: data.sectionErrors,
       };
     },
   });
