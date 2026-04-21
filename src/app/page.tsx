@@ -190,7 +190,7 @@ export default function Dashboard() {
           {selectedChain === 'gnosis' && (
             <>
               <StatCard
-                title="Airdrop Claims"
+                title="$PNK Airdrop Claims"
                 value={stats?.airdropClaims || 0}
                 loading={globalLoading}
                 variant="orange"
@@ -307,7 +307,7 @@ export default function Dashboard() {
           {selectedChain === 'gnosis' && (
             <>
               <StatCard
-                title="Airdrop Claims"
+                title="$PNK Airdrop Claims"
                 value={periodStats?.airdropClaims || 0}
                 loading={rangeLoading}
                 variant="orange"
