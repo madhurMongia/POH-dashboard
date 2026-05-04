@@ -5,7 +5,7 @@ import { useGlobalStats, useCustomRangeStats, useExpiredProfiles } from '@/hooks
 import { StatCard } from '@/components/ui/StatCard';
 import { DateRangePicker } from '@/components/DateRangePicker';
 import { ChainSelector } from '@/components/ChainSelector';
-import { subDays, startOfDay, endOfDay } from 'date-fns';
+import { addUtcDays, endOfUtcDay, formatUtcDate, startOfUtcDay } from '@/lib/utcDate';
 import { Activity, Globe, Moon, Sun } from 'lucide-react';
 import { ChainId, getChainConfig } from '@/lib/graphql';
 
@@ -21,8 +21,8 @@ export default function Dashboard() {
 
   // Set initial state on mount
   useEffect(() => {
-    const end = endOfDay(new Date());
-    const start = startOfDay(subDays(end, 30));
+    const end = endOfUtcDay(new Date());
+    const start = startOfUtcDay(addUtcDays(end, -30));
     setDateRange({ start, end });
     const storedTheme = typeof window !== 'undefined' ? localStorage.getItem('poh-theme') : null;
     const initialTheme = storedTheme === 'dark' ? 'dark' : 'light';
@@ -262,7 +262,7 @@ export default function Dashboard() {
             <Activity className="w-5 h-5 text-poh-pink" />
             Period Analysis
             <span className="text-sm font-normal text-poh-text-secondary ml-2">
-              ({dateRange.start?.toLocaleDateString()} - {dateRange.end?.toLocaleDateString()})
+              ({dateRange.start ? formatUtcDate(dateRange.start) : ''} - {dateRange.end ? formatUtcDate(dateRange.end) : ''} UTC)
             </span>
           </h2>
           <DateRangePicker

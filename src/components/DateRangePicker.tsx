@@ -2,7 +2,13 @@
 
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
-import { format, subDays, startOfDay, endOfDay } from 'date-fns';
+import {
+  addUtcDays,
+  endOfUtcDay,
+  formatUtcDate,
+  parseUtcDateInput,
+  startOfUtcDay,
+} from '@/lib/utcDate';
 
 interface DateRangePickerProps {
   startDate: Date | null;
@@ -22,13 +28,13 @@ export function DateRangePicker({ startDate, endDate, onRangeChange }: DateRange
 
   const handlePresetClick = (preset: typeof presets[0]) => {
     setActivePreset(preset.value);
-    const end = endOfDay(new Date());
+    const end = endOfUtcDay(new Date());
     let start: Date;
 
     if (preset.value === 'all') {
-      start = startOfDay(new Date('2024-09-01'));
+      start = startOfUtcDay(new Date('2024-09-01T00:00:00.000Z'));
     } else {
-      start = startOfDay(subDays(end, preset.days));
+      start = startOfUtcDay(addUtcDays(end, -preset.days));
     }
 
     onRangeChange(start, end);
@@ -36,7 +42,7 @@ export function DateRangePicker({ startDate, endDate, onRangeChange }: DateRange
 
   const handleCustomDateChange = (type: 'start' | 'end', value: string) => {
     setActivePreset('custom');
-    const date = value ? new Date(value) : null;
+    const date = parseUtcDateInput(value);
     if (type === 'start') {
       onRangeChange(date, endDate);
     } else {
@@ -67,14 +73,14 @@ export function DateRangePicker({ startDate, endDate, onRangeChange }: DateRange
         <input
           type="date"
           className="bg-poh-bg-primary border border-poh-stroke rounded-md px-3 py-1.5 text-sm text-poh-text-primary outline-none focus:ring-2 focus:ring-poh-orange/50"
-          value={startDate ? format(startDate, 'yyyy-MM-dd') : ''}
+          value={startDate ? formatUtcDate(startDate) : ''}
           onChange={(e) => handleCustomDateChange('start', e.target.value)}
         />
         <span className="text-poh-text-secondary">-</span>
         <input
           type="date"
           className="bg-poh-bg-primary border border-poh-stroke rounded-md px-3 py-1.5 text-sm text-poh-text-primary outline-none focus:ring-2 focus:ring-poh-orange/50"
-          value={endDate ? format(endDate, 'yyyy-MM-dd') : ''}
+          value={endDate ? formatUtcDate(endDate) : ''}
           onChange={(e) => handleCustomDateChange('end', e.target.value)}
         />
       </div>

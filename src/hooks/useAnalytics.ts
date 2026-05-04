@@ -18,6 +18,7 @@ import {
   DailyTrendsResponse,
   DailyAnalytics
 } from '@/types/analytics';
+import { utcDaySeconds } from '@/lib/utcDate';
 
 type SeerClaimGlobalResponse = {
   uniqueEstimate?: number;
@@ -194,22 +195,10 @@ export function useCustomRangeStats(chainId: ChainId, startDate: number | null, 
 
       const startDateObj = new Date(startDate);
       const endDateObj = new Date(endDate);
-      const startUtcSec = Math.floor(Date.UTC(
-        startDateObj.getUTCFullYear(),
-        startDateObj.getUTCMonth(),
-        startDateObj.getUTCDate()
-      ) / 1000);
-      const endUtcSec = Math.floor(Date.UTC(
-        endDateObj.getUTCFullYear(),
-        endDateObj.getUTCMonth(),
-        endDateObj.getUTCDate()
-      ) / 1000);
+      const startUtcSec = utcDaySeconds(startDateObj);
+      const endUtcSec = utcDaySeconds(endDateObj);
       const endUtcSecExclusive = endUtcSec + 86400;
-      const endDayUtcSecForVisitors = Math.floor(Date.UTC(
-        endDateObj.getFullYear(),
-        endDateObj.getMonth(),
-        endDateObj.getDate()
-      ) / 1000);
+      const endDayUtcSecForVisitors = utcDaySeconds(endDateObj);
 
       const allRows: DailyAnalytics[] = [];
       let skip = 0;
